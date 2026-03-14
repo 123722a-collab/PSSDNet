@@ -1,0 +1,29 @@
+{
+  "seed": 42,
+  "image_size": 224,
+  "batch_size": 32,
+  "epoch": 15,
+  "n_frames": 8,
+  "num_workers": 4,
+  "keep_topk": 5,
+
+  "hub_repo_dir": "/root/autodl-tmp/src/hf_home/hub/models--openai--clip-vit-large-patch14",
+
+  "gamma": 0.05,
+
+  "mu_div": 0.01,
+  "mu_bal": 0.02,
+  "delta_div": 0.40,
+  "tau_bal": 0.12,
+
+  "head": {
+    "n_proto": 5,
+    "s": 30.0,
+    "m0": 0.20,
+    "lam": 0.30,
+    "m_min": 0.0,
+    "m_max": 0.60,
+    "margin_type": "arc",
+    "learnable_alpha": true
+  }
+}
