@@ -364,14 +364,6 @@ class MPAM_CLIP(nn.Module):
                 for p in m.parameters():
                     p.requires_grad = True
 
-        self.bn = nn.BatchNorm1d(
-            feat_dim,
-            affine=False,
-            track_running_stats=True,
-            momentum=0.01,
-            eps=1e-5,
-        )
-
         head_cfg = head_cfg or {}
         self.classifier = MultiProtoAdaptiveMarginHead(
             in_dim=feat_dim,
@@ -389,24 +381,8 @@ class MPAM_CLIP(nn.Module):
         for p in self.classifier.parameters():
             p.requires_grad = True
 
-    def _bn_forward(self, feat_fp32: torch.Tensor, update_stats: bool) -> torch.Tensor:
-        if update_stats:
-            return self.bn(feat_fp32)
-
-        return F.batch_norm(
-            feat_fp32,
-            self.bn.running_mean,
-            self.bn.running_var,
-            weight=None,
-            bias=None,
-            training=False,
-            momentum=0.0,
-            eps=self.bn.eps,
-        )
-
-    def forward(self, x: torch.Tensor, y: torch.Tensor = None, bn_update: bool = True):
+    def forward(self, x: torch.Tensor, y: torch.Tensor = None):
         feat = self.backbone(x).float()
-        feat = self._bn_forward(feat, bn_update)
         z = F.normalize(feat, dim=-1)
         logits = self.classifier(z, y)
         return logits, z
@@ -525,12 +501,12 @@ def main(args):
             set_optimizer_lr(optimizer, lr)
             optimizer.zero_grad(set_to_none=True)
 
-            logits, z = model(x, y, bn_update=True)
+            logits, z = model(x, y)
 
             use_cons = (torch.rand(1, device=device).item() < 0.5) and (gamma > 0.0)
             if use_cons:
                 x_fd = fft_random_debias(x)
-                logits_fd, z_fd = model(x_fd, None, bn_update=False)
+                logits_fd, z_fd = model(x_fd, None)
             else:
                 logits_fd, z_fd = None, None
 
@@ -677,7 +653,7 @@ def main(args):
                     x = x.half()
                 x = torch.nan_to_num(x, nan=0.0, posinf=1.0, neginf=-1.0)
 
-                logits_eval, z = model(x, None, bn_update=False)
+                logits_eval, z = model(x, None)
 
                 if is_bad_forward(logits_eval, z):
                     print(f"[Bad val forward] epoch={epoch} step={step}")
