@@ -201,14 +201,6 @@ class MPAM_CLIP(nn.Module):
         self.backbone = clip_vision
         feat_dim = clip_vision.get_features_dim()
 
-        self.bn = nn.BatchNorm1d(
-            feat_dim,
-            affine=False,
-            track_running_stats=True,
-            momentum=0.01,
-            eps=1e-5,
-        )
-
         head_cfg = normalize_head_cfg(head_cfg)
 
         self.classifier = MultiProtoAdaptiveMarginHead(
@@ -226,7 +218,6 @@ class MPAM_CLIP(nn.Module):
 
     def forward(self, x: torch.Tensor):
         feat = self.backbone(x).float()
-        feat = self.bn(feat)
         z = F.normalize(feat, dim=-1)
         logits = self.classifier(z, None)
         return logits, z
@@ -249,6 +240,7 @@ def load_ckpt_and_build_model(ckpt_path: str, clip_vision: CLIPVisionOnly, devic
     model = MPAM_CLIP(clip_vision, head_cfg=head_cfg).to(device)
 
     sd = ckpt["model"]
+    sd = {k: v for k, v in sd.items() if not k.startswith("bn.")}
     if "classifier.prototypes" in sd:
         k_ckpt = int(sd["classifier.prototypes"].shape[1])
         k_build = int(model.classifier.n_proto)
