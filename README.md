@@ -1,5 +1,5 @@
-# Prototypical Solidification and StructuralDisentanglement for Generalizable Face Forgery
-The official PyTorch implementation for the following paper:Solidification and StructuralDisentanglement for Generalizable Face Forgery
+# Beyond Single-Centroid: Modeling Multi-Modal Forgery Manifold for Generalizable Face Forgery Detection
+The official PyTorch implementation for the following paper:Beyond Single-Centroid: Modeling Multi-Modal Forgery Manifold for Generalizable Face Forgery Detection
 ## Setup
 
 ### 1. Dataset
